@@ -106,7 +106,13 @@ export class Sandbox extends LitElement {
       <md-theme lumos ?darkTheme=${this.darkTheme}>
         <div class="container">
           <div style=${`width: ${this.containerWidth}; height: ${this.containerHeight};`} class="widget-container">
-            <hospital-bed-capacity></hospital-bed-capacity>
+            <hospital-bed-capacity
+              selectedState="CA"
+              city="San Diego"
+              bedCapacity="90%"
+              hospitalName="San Diego Hospital"
+              hospitalAddress="660 S Fair Oaks Ave, San Diego, CA 94086">
+            </hospital-bed-capacity>
           </div>
         </div>
       </md-theme>

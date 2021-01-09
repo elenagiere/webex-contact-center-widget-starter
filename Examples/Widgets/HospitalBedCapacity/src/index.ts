@@ -6,7 +6,7 @@
  *
  */
 
-import { html, LitElement, customElement, css, internalProperty } from "lit-element";
+import { html, LitElement, customElement, css, internalProperty, property } from "lit-element";
 import "./components/Hospitals";
 
 /**
@@ -14,6 +14,12 @@ import "./components/Hospitals";
  */
 @customElement("hospital-bed-capacity")
 export default class HospitalBedCapacity extends LitElement {
+  @property({ type: String }) selectedState = "CA";
+  @property({ type: String }) city = "Sunnyvale";
+  @property({ type: String }) bedCapacity = "80%";
+  @property({ type: String }) hospitalName = "Valley Health Center Sunnyvale";
+  @property({ type: String }) hospitalAddress = "660 S Fair Oaks Ave, Sunnyvale, CA 94086";
+  
   @internalProperty() private contacts: string[] = [];
   
   static get styles() {
@@ -29,7 +35,13 @@ export default class HospitalBedCapacity extends LitElement {
 
   render() {
     return html`
-      <my-hospital-stats></my-hospital-stats>
+      <my-hospital-stats
+        selectedState=${this.selectedState}
+        city=${this.city}
+        bedCapacity=${this.bedCapacity}
+        hospitalName=${this.hospitalName}
+        hospitalAddress=${this.hospitalAddress}>
+      </my-hospital-stats>
     `;
   }
 }
