@@ -13,14 +13,27 @@ import styles from "./Hospitals.scss";
 @customElement("my-hospital-stats")
 export default class Hospitals extends LitElement {
     /**
-     * Property apiKey
+     * Property googleApiKey
      * Access your API key from Google Maps Platform
      * https://cloud.google.com/maps-platform
      */
-    @property({ type: String, reflect: true, attribute: "api-key" }) apiKey = "AIzaSyDWb7xO0Ms_1oJwb25tiKJU18r4dmj2mXY";
-    @property({ type: Number, reflect: true }) latitude = 37.405270;
-    @property({ type: Number, reflect: true }) longitude = -122.012210;
-    @property({ type: String }) bedCapacity = "80%";
+    @property({ type: String, reflect: true, attribute: "google-api-key" }) googleApiKey = "";
+    /**
+    * Property: covidApiKey
+    * Access API Key: Covid Act Now Website
+    * https://apidocs.covidactnow.org/access
+    */
+    @property({ type: String, reflect: true, attribute: "covi-api-key" }) covidApiKey = "";
+    @property({ type: Number, reflect: true }) latitude = 40.405270;
+    @property({ type: Number, reflect: true }) longitude = -123.012210;
+    @property({ type: String }) bedCapacity = "";
+
+    @internalProperty() statePostal = "";
+    @internalProperty() county = "";
+    @internalProperty() areaCode = "";
+
+    @internalProperty() hospitalName = "";
+    @internalProperty() hospitalAddress = "";
 
     @internalProperty() map?: google.maps.Map;
     @internalProperty() markers?: google.maps.places.PlaceResult[];
@@ -31,30 +44,39 @@ export default class Hospitals extends LitElement {
     @query("#pac-input") searchInput?: HTMLInputElement;
 
     @internalProperty() loader = new Loader({
-        apiKey: this.apiKey,
+        apiKey: this.googleApiKey,
         version: "weekly",
         libraries: ["places"]
     });
 
     connectedCallback() {
         super.connectedCallback();
-        this.loader.apiKey = this.apiKey;
+        this.loader.apiKey = this.googleApiKey;
     }
 
     async firstUpdated(changeProperties: PropertyValues) {
         super.firstUpdated(changeProperties);
-        await this.bedCapacityLookup().then(() => this.initMap());
+        await this.fetchAllCounties()
+        .then(() => {
+            this.initMap().then(() => this.fetchCountyBedCapacity());
+        });
     }
 
+    async update(changeProperties: PropertyValues) {
+        super.update(changeProperties);
 
-    // async updated(changeProperties: PropertyValues) {
-    //     super.updated(changeProperties);
+        if (changeProperties.has("latitude") ||
+        changeProperties.has("longitude")) {
+            await this.initMap().then(() => this.fetchCountyBedCapacity());
+        }
 
-    //     if (changeProperties.has("nearestHospitalData")) {
-    //         console.log('[log] updated nearestHospitalData', this.nearestHospitalData);
-    //         this.hospitalLookup();
-    //     }
-    // }
+        if (changeProperties.has("nearestHospitalData") ||
+            changeProperties.has("areaCode") ||
+            changeProperties.has("statePostal")) {
+                console.log('[log] update');
+                this.hospitalAddress = `${this.nearestHospitalData?.vicinity}, ${this.statePostal} ${this.areaCode}`;
+        }
+    }
 
     initMap = async () => {
         if (!this.map) {
@@ -68,28 +90,29 @@ export default class Hospitals extends LitElement {
                     });
                 }
             })
-            // .then(() => this.nearestHospital())
-            // .then(() => this.hospitalLookup());
+            .then(() => this.nearestHospital());
         }
     };
 
-    //   hospitalLookup = () => {
-    //       console.log('[log] hospital Lookup', this.allHospitalData?.length);
-    //       if (this.allHospitalData?.length) {
-    //         const foundHospital = this.allHospitalData.filter((hospitalData: any) => {
-    //             return hospitalData.HOSPITAL_NAME === this.nearestHospitalData?.name;
-    //         }) as any;
-    //         console.log('[log] foundHospital', foundHospital);
-    //         this.bedCapacity = `${(foundHospital?.BED_UTILIZATION * 100)}%`;
-    //       }
-    //   }
+    getFormattedAddress = (location: {lat: number, lng: number}) => {
+        return new google.maps.Geocoder().geocode({
+            location
+        }, (results: any) => {
+            const address = results[0].address_components;
+            if (address) {
+                this.county = address[3].short_name;
+                this.statePostal = address[4].short_name;
+                this.areaCode = address[6].short_name;
+                console.log('[log] county/statePostal', this.county, this.statePostal, this.areaCode);
+            }
+        });
+    };
 
     nearestHospital = async () => {
         if (this.map) {
             const places = new google.maps.places.PlacesService(this.map);
             places.nearbySearch({
                 location: { lat: this.latitude, lng: this.longitude },
-                // fields: ['formatted_address'],
                 rankBy: google.maps.places.RankBy.DISTANCE,
                 type: "hospital",
                 keyword: "(emergency) AND ((medical centre) OR hospital)",
@@ -97,20 +120,65 @@ export default class Hospitals extends LitElement {
             (results: any) => {
                 console.log('[log] nearestHospital results', results);
                 this.nearestHospitalData = results[0];
+                this.hospitalName = this.nearestHospitalData?.name;
+                this.getFormattedAddress(this.nearestHospitalData?.geometry?.location);
             });
         }
     };
 
-    bedCapacityLookup = async () => {
-        return await fetch("https://opendata.arcgis.com/datasets/1044bb19da8d4dbfb6a96eb1b4ebf629_0.geojson")
-            .then((response) => {
-                return response.json();
-            }).then((data) => {
-                console.log("[log] bedCapacity all", data);
-                this.allHospitalData = data?.features;
-                return data;
+    fetchAllCounties = async () => {
+        return await fetch(
+          `https://api.covidactnow.org/v2/counties.json?apiKey=${this.covidApiKey}`
+        )
+          .then((response) => {
+            return response.json();
+          })
+          .then((allUSACounties) => {
+            return allUSACounties;
+        });
+      };
+
+      fetchCountyBedCapacity = async () => {
+        return await fetch(
+          `https://api.covidactnow.org/v2/counties.json?apiKey=${this.covidApiKey}`
+        )
+          .then((response) => {
+            return response.json();
+          })
+          .then((allUSACounties) => {
+            const countyResults = allUSACounties.filter((countyData: { state: string; county: string; }) => {
+                return this.statePostal === countyData.state && this.county === countyData.county;
             });
-    }
+            return countyResults[0];
+          })
+          .then((countyData) => {
+              console.log('[log] countyData ', countyData);
+              const { currentUsageTotal, capacity } = countyData?.actuals?.hospitalBeds;
+              const percentage = `${((currentUsageTotal / capacity) * 100).toFixed(0)}%`;
+              this.bedCapacity = percentage;
+          });
+      };  
+
+    // fetchCountyBedCapacity = async () => {
+    //     return await fetch(
+    //       `https://api.covidactnow.org/v2/counties.json?apiKey=${this.covidApiKey}`
+    //     )
+    //       .then((response) => {
+    //         return response.json();
+    //       })
+    //       .then((allUSACounties) => {
+    //         const countyResults = allUSACounties.filter((countyData: { state: string; county: string; }) => {
+    //             return this.statePostal === countyData.state && this.county === countyData.county;
+    //         });
+    //         return countyResults[0];
+    //       })
+    //       .then((countyData) => {
+    //           console.log('[log] countyData ', countyData);
+    //           const { currentUsageTotal, capacity } = countyData?.actuals?.hospitalBeds;
+    //           const percentage = `${((currentUsageTotal / capacity) * 100).toFixed(0)}%`;
+    //           this.bedCapacity = percentage;
+    //       });
+    //   };
 
     static get styles() {
         return styles;
@@ -119,24 +187,20 @@ export default class Hospitals extends LitElement {
     render() {
         return html`
         <div class="hosiptal-section">
-            <div class="main-header">
-                <span class="header-text">Hospital Bed Capacity</span>
-                <md-button circle hasRemoveStyle><md-icon slot="icon" name="maximize_16"></md-icon></md-button>
-            </div>
             <div class="body">
                 <md-badge class="hospital-badge" color="mint" split>
                     <span slot="split-left">
-                        ${`${"Sunnyvale"}, ${"CA"}`}
+                        ${`${this.county}, ${this.statePostal}`}
                     </span>
                     <span slot="split-right">${this.bedCapacity}</span>
                 </md-badge>
                 <div class="hospital row">
                     <span class="title">Hospital</span>
-                    <span class="value">${this.nearestHospitalData?.name}</span>
+                    <span class="value">${this.hospitalName}</span>
                 </div>
                 <div class="address row">
                     <span class="title">Address</span>
-                    <span class="value">${this.nearestHospitalData?.vicinity}</span>
+                    <span class="value">${this.hospitalAddress}</span>
                 </div>
             </div>
             <div id="map"></div>

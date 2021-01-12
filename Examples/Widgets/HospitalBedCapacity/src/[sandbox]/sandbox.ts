@@ -15,7 +15,7 @@ import styles from "./sandbox.scss";
 export class Sandbox extends LitElement {
   @internalProperty() darkTheme = false;
   @internalProperty() containerWidth = "600px";
-  @internalProperty() containerHeight = "180px";
+  @internalProperty() containerHeight = "122px";
 
   static get styles() {
     return styles;
@@ -100,11 +100,17 @@ export class Sandbox extends LitElement {
 
   render() {
     /**
-     * Property apiKey
+     * Property googleApiKey
      * Access your API key from Google Maps Platform
      * https://cloud.google.com/maps-platform
      */
-    const apiKey = "";
+    const googleApiKey = "";
+    /**
+    * Property: covidApiKey
+    * Access API Key: Covid Act Now Website
+    * https://apidocs.covidactnow.org/access
+    */
+    const covidApiKey = "";
 
     return html`
       <div class="toggle">
@@ -114,12 +120,8 @@ export class Sandbox extends LitElement {
         <div class="container">
           <div style=${`width: ${this.containerWidth}; height: ${this.containerHeight};`} class="widget-container">
             <hospital-bed-capacity
-              api-key=${apiKey}
-              selectedState="CA"
-              city="San Diego"
-              bedCapacity="90%"
-              hospitalName="San Diego Hospital"
-              hospitalAddress="660 S Fair Oaks Ave, San Diego, CA 94086">
+              google-api-key=${googleApiKey}
+              covid-api-key=${covidApiKey}>
             </hospital-bed-capacity>
           </div>
         </div>
