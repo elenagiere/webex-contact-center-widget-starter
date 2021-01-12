@@ -12,28 +12,20 @@ import styles from "./Hospitals.scss";
 
 @customElement("my-hospital-stats")
 export default class Hospitals extends LitElement {
-    @property({ type: String }) selectedState = "CA";
-    @property({ type: String }) city = "Sunnyvale";
-    @property({ type: String }) bedCapacity = "80%";
-    @property({ type: String }) hospitalName = "Valley Health Center Sunnyvale";
-    @property({ type: String }) hospitalAddress = "660 S Fair Oaks Ave, Sunnyvale, CA 94086";
-
-    @property({ type: Number, reflect: true }) latitude = 37.405270;
-    @property({ type: Number, reflect: true }) longitude = -122.012210;
-    @property({ type: String, reflect: true }) search = "";
-    @property({ type: Boolean, reflect: true, attribute: "search-enabled" })
-    searchEnabled = false;
     /**
      * Property apiKey
      * Access your API key from Google Maps Platform
      * https://cloud.google.com/maps-platform
      */
-    @property({ type: String, reflect: true, attribute: "api-key" }) apiKey = "";
-    @property({ type: Number, reflect: true }) zoom = 12;
+    @property({ type: String, reflect: true, attribute: "api-key" }) apiKey = "AIzaSyDWb7xO0Ms_1oJwb25tiKJU18r4dmj2mXY";
+    @property({ type: Number, reflect: true }) latitude = 37.405270;
+    @property({ type: Number, reflect: true }) longitude = -122.012210;
+    @property({ type: String }) bedCapacity = "80%";
 
     @internalProperty() map?: google.maps.Map;
     @internalProperty() markers?: google.maps.places.PlaceResult[];
     @internalProperty() nearestHospitalData?: any;
+    @internalProperty() allHospitalData?: Array<{ HOSPITAL_NAME: string, BED_UTILIZATION: number }> = [];
 
     @query("#map") mapDiv?: HTMLElement;
     @query("#pac-input") searchInput?: HTMLInputElement;
@@ -49,10 +41,20 @@ export default class Hospitals extends LitElement {
         this.loader.apiKey = this.apiKey;
     }
 
-    firstUpdated(changeProperties: PropertyValues) {
+    async firstUpdated(changeProperties: PropertyValues) {
         super.firstUpdated(changeProperties);
-        this.initMap();
+        await this.bedCapacityLookup().then(() => this.initMap());
     }
+
+
+    // async updated(changeProperties: PropertyValues) {
+    //     super.updated(changeProperties);
+
+    //     if (changeProperties.has("nearestHospitalData")) {
+    //         console.log('[log] updated nearestHospitalData', this.nearestHospitalData);
+    //         this.hospitalLookup();
+    //     }
+    // }
 
     initMap = async () => {
         if (!this.map) {
@@ -62,16 +64,27 @@ export default class Hospitals extends LitElement {
                 if (this.mapDiv) {
                     this.map = new google.maps.Map(this.mapDiv, {
                     center: { lat: this.latitude, lng: this.longitude },
-                    zoom: this.zoom,
                     mapTypeControl: false
                     });
                 }
             })
-            .then(() => this.hospitalLookup());
+            // .then(() => this.nearestHospital())
+            // .then(() => this.hospitalLookup());
         }
-      };
+    };
 
-    hospitalLookup = async () => {
+    //   hospitalLookup = () => {
+    //       console.log('[log] hospital Lookup', this.allHospitalData?.length);
+    //       if (this.allHospitalData?.length) {
+    //         const foundHospital = this.allHospitalData.filter((hospitalData: any) => {
+    //             return hospitalData.HOSPITAL_NAME === this.nearestHospitalData?.name;
+    //         }) as any;
+    //         console.log('[log] foundHospital', foundHospital);
+    //         this.bedCapacity = `${(foundHospital?.BED_UTILIZATION * 100)}%`;
+    //       }
+    //   }
+
+    nearestHospital = async () => {
         if (this.map) {
             const places = new google.maps.places.PlacesService(this.map);
             places.nearbySearch({
@@ -82,11 +95,22 @@ export default class Hospitals extends LitElement {
                 keyword: "(emergency) AND ((medical centre) OR hospital)",
             },
             (results: any) => {
-                console.log('[log] hospital lookup', results[0]);
+                console.log('[log] nearestHospital results', results);
                 this.nearestHospitalData = results[0];
             });
         }
-      };
+    };
+
+    bedCapacityLookup = async () => {
+        return await fetch("https://opendata.arcgis.com/datasets/1044bb19da8d4dbfb6a96eb1b4ebf629_0.geojson")
+            .then((response) => {
+                return response.json();
+            }).then((data) => {
+                console.log("[log] bedCapacity all", data);
+                this.allHospitalData = data?.features;
+                return data;
+            });
+    }
 
     static get styles() {
         return styles;
@@ -102,17 +126,17 @@ export default class Hospitals extends LitElement {
             <div class="body">
                 <md-badge class="hospital-badge" color="mint" split>
                     <span slot="split-left">
-                        ${`${this.city}, ${this.selectedState}`}
+                        ${`${"Sunnyvale"}, ${"CA"}`}
                     </span>
                     <span slot="split-right">${this.bedCapacity}</span>
                 </md-badge>
                 <div class="hospital row">
                     <span class="title">Hospital</span>
-                    <span class="value">${this.nearestHospitalData?.name || this.hospitalName}</span>
+                    <span class="value">${this.nearestHospitalData?.name}</span>
                 </div>
                 <div class="address row">
                     <span class="title">Address</span>
-                    <span class="value">${this.nearestHospitalData?.vicinity || this.hospitalAddress}</span>
+                    <span class="value">${this.nearestHospitalData?.vicinity}</span>
                 </div>
             </div>
             <div id="map"></div>

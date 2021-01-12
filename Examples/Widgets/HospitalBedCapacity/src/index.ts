@@ -14,11 +14,19 @@ import "./components/Hospitals";
  */
 @customElement("hospital-bed-capacity")
 export default class HospitalBedCapacity extends LitElement {
-  @property({ type: String }) selectedState = "CA";
-  @property({ type: String }) city = "Sunnyvale";
-  @property({ type: String }) bedCapacity = "80%";
-  @property({ type: String }) hospitalName = "Valley Health Center Sunnyvale";
-  @property({ type: String }) hospitalAddress = "660 S Fair Oaks Ave, Sunnyvale, CA 94086";
+    /**
+     * Property apiKey
+     * Access your API key from Google Maps Platform
+     * https://cloud.google.com/maps-platform
+     */
+    @property({ type: String, reflect: true, attribute: "api-key" }) apiKey = "";
+    @property({ type: Number, reflect: true }) latitude = 37.405270;
+    @property({ type: Number, reflect: true }) longitude = -122.012210;
+    @property({ type: String }) selectedState = "CA";
+    @property({ type: String }) city = "Sunnyvale";
+    @property({ type: String }) bedCapacity = "80%";
+    @property({ type: String }) hospitalName = "Valley Health Center Sunnyvale";
+    @property({ type: String }) hospitalAddress = "660 S Fair Oaks Ave, Sunnyvale, CA 94086";
   
   @internalProperty() private contacts: string[] = [];
   

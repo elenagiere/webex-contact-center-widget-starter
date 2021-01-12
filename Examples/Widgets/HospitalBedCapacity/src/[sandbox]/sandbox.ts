@@ -99,6 +99,13 @@ export class Sandbox extends LitElement {
   }
 
   render() {
+    /**
+     * Property apiKey
+     * Access your API key from Google Maps Platform
+     * https://cloud.google.com/maps-platform
+     */
+    const apiKey = "";
+
     return html`
       <div class="toggle">
         ${this.themeToggle()}
@@ -107,6 +114,7 @@ export class Sandbox extends LitElement {
         <div class="container">
           <div style=${`width: ${this.containerWidth}; height: ${this.containerHeight};`} class="widget-container">
             <hospital-bed-capacity
+              api-key=${apiKey}
               selectedState="CA"
               city="San Diego"
               bedCapacity="90%"
