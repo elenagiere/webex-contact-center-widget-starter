@@ -23,7 +23,12 @@ export default class Hospitals extends LitElement {
     @property({ type: String, reflect: true }) search = "";
     @property({ type: Boolean, reflect: true, attribute: "search-enabled" })
     searchEnabled = false;
-    @property({ type: String, reflect: true, attribute: "api-key" }) apiKey = "AIzaSyDWb7xO0Ms_1oJwb25tiKJU18r4dmj2mXY";
+    /**
+     * Property apiKey
+     * Access your API key from Google Maps Platform
+     * https://cloud.google.com/maps-platform
+     */
+    @property({ type: String, reflect: true, attribute: "api-key" }) apiKey = "";
     @property({ type: Number, reflect: true }) zoom = 12;
 
     @internalProperty() map?: google.maps.Map;
