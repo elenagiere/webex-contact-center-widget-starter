@@ -6,6 +6,12 @@ $main-border: 1px solid var(--md-primary-seperator-color, #ccc);
   color: var(--md-primary-text-color);
 }
 
+.body.loading {
+  padding: 33px;
+  display: flex;
+  justify-content: center;
+}
+
 .main-header {
   display: flex;
   justify-content: space-between;
@@ -29,7 +35,6 @@ $main-border: 1px solid var(--md-primary-seperator-color, #ccc);
   }
 }
 
-
 .hospitals-section {
   height: 171px;
 }
@@ -41,6 +46,7 @@ $main-border: 1px solid var(--md-primary-seperator-color, #ccc);
 .row {
   font-size: 14px;
   margin-top: 8px;
+  line-height: 21px;
 
   .title {
     color: var(--md-secondary-text-color, #545454);

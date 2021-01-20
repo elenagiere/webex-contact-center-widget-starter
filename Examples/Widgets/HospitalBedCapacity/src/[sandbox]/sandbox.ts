@@ -105,6 +105,7 @@ export class Sandbox extends LitElement {
      * https://cloud.google.com/maps-platform
      */
     const googleApiKey = "";
+
     /**
     * Property: covidApiKey
     * Access API Key: Covid Act Now Website
@@ -121,7 +122,9 @@ export class Sandbox extends LitElement {
           <div style=${`width: ${this.containerWidth}; height: ${this.containerHeight};`} class="widget-container">
             <hospital-bed-capacity
               google-api-key=${googleApiKey}
-              covid-api-key=${covidApiKey}>
+              covid-api-key=${covidApiKey}
+              latitude=${40.7128}
+              longitude=${-74.0060}>
             </hospital-bed-capacity>
           </div>
         </div>

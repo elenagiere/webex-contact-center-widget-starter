@@ -46,7 +46,9 @@ export default class HospitalBedCapacity extends LitElement {
     return html`
       <my-hospital-stats
         covi-api-key=${this.covidApiKey}
-        google-api-key=${this.googleApiKey}>
+        google-api-key=${this.googleApiKey}
+        latitude=${this.latitude}
+        longitude=${this.longitude}>
       </my-hospital-stats>
     `;
   }
